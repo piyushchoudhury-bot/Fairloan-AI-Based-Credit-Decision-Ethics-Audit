@@ -1,0 +1,103 @@
+{% extends "base.html" %}
+{% block title %}Cost-as-Proxy Bias{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Experiment 4</div>
+  <h1>Cost-as-a-Proxy Resource Bias Auditor</h1>
+  <p>Investigating whether resource/spending-related features act as a proxy for socioeconomic status.</p>
+</div>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<div class="fl-card">
+  <h5 class="section-title">Method</h5>
+  <p>Two Random Forest models are trained live from the current dataset:</p>
+  <ul class="fl-list-clean">
+    <li><strong>Model A (With Resource Features):</strong> uses all standard features, including {{ result.resource_features|join(', ') }}.</li>
+    <li><strong>Model B (Without Resource Features):</strong> the identical pipeline, with those resource-related features removed.</li>
+  </ul>
+  <p class="text-muted small">Both models are evaluated on the same held-out test split (25%), with gender used only for post-hoc auditing, never as a training feature.</p>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Comparison Table</h5>
+  <table class="fl-table">
+    <thead><tr><th>Metric</th><th>With Resource Features</th><th>Without Resource Features</th></tr></thead>
+    <tbody>
+      {% for row in result.comparison_table %}
+      <tr><td>{{ row.metric }}</td><td>{{ row.with_resource }}</td><td>{{ row.without_resource }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Group Approval (Selection) Rate</h5>
+      <canvas id="approvalChart" height="200"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">False Positive / False Negative Rate (With Resource Features)</h5>
+      <canvas id="fprFnrChart" height="200"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Interpretation</h5>
+  <p>{{ result.interpretation }}</p>
+  <div class="fl-info-box">
+    <strong>Why might spending/balance act as a proxy?</strong> Monthly spending,
+    account balance, and transaction count are all correlated with income and
+    broader socioeconomic circumstances. Because socioeconomic status itself
+    correlates with historically protected characteristics (e.g., gender,
+    location), a model that leans heavily on these resource features can end
+    up reproducing group disparities even though it never sees the sensitive
+    attribute directly &mdash; this is the essence of proxy discrimination.
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Ethical Implications</h5>
+  <p class="text-muted small">Removing proxy-prone features is not automatically "the fix" &mdash; it can trade away legitimate predictive signal and reduce accuracy. This experiment is meant to make that fairness/performance trade-off visible and quantifiable, not to argue for one specific policy choice.</p>
+</div>
+
+<script>
+const colors = fairloanChartColors();
+const approval = {{ result.group_approval|tojson }};
+const groups = Object.keys(approval.with_resource);
+
+new Chart(document.getElementById('approvalChart'), {
+  type: 'bar',
+  data: {
+    labels: groups,
+    datasets: [
+      { label: 'With Resource Features', data: groups.map(g => approval.with_resource[g]*100), backgroundColor: colors.primary },
+      { label: 'Without Resource Features', data: groups.map(g => approval.without_resource[g]*100), backgroundColor: colors.accent },
+    ]
+  },
+  options: { plugins: { legend: { position: 'bottom' } }, scales: { y: { title: { display: true, text: '% Approved' } } } }
+});
+
+const fprFnr = {{ result.fpr_fnr.with_resource|tojson }};
+const g2 = Object.keys(fprFnr.fpr);
+new Chart(document.getElementById('fprFnrChart'), {
+  type: 'bar',
+  data: {
+    labels: g2,
+    datasets: [
+      { label: 'False Positive Rate', data: g2.map(g => fprFnr.fpr[g]*100), backgroundColor: colors.moderate },
+      { label: 'False Negative Rate', data: g2.map(g => fprFnr.fnr[g]*100), backgroundColor: colors.high },
+    ]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+
+{% endif %}
+{% endblock %}

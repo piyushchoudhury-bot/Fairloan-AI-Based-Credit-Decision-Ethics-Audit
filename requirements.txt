@@ -1,0 +1,8 @@
+Flask>=3.0
+Werkzeug>=3.0
+pandas>=2.0
+numpy>=1.26
+scikit-learn>=1.4
+fairlearn>=0.10
+shap>=0.44
+joblib>=1.3

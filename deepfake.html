@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% block title %}Deepfake Vulnerability{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Experiment 3</div>
+  <h1>Deepfake Vulnerability Assessment</h1>
+  <p>A simulated risk assessment of the loan-approval identity/document verification ecosystem &mdash; not a real forensic deepfake detector.</p>
+</div>
+
+<div class="fl-info-box mb-4">
+  This module performs a <strong>simulated vulnerability assessment</strong>, not
+  actual forensic deepfake detection. Any file you upload is analyzed only for
+  a couple of basic, explainable metadata heuristics (file size/type) and is
+  deleted immediately after the check &mdash; it is never stored or executed.
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-5">
+    <div class="fl-card">
+      <h5 class="section-title">Optional: Upload a Sample Document/Image</h5>
+      <form method="POST" enctype="multipart/form-data">
+        <input type="file" name="document" class="form-control mb-3" accept=".png,.jpg,.jpeg,.pdf">
+        <button type="submit" class="btn btn-fl-primary w-100">Run Simulated Check</button>
+      </form>
+      {% if upload_error %}<div class="alert alert-warning mt-3">{{ upload_error }}</div>{% endif %}
+
+      {% if assessment.file_note %}
+      <div class="mt-3">
+        <h6>File Heuristic Result</h6>
+        <p class="small text-muted mb-1">{{ assessment.file_note.filename }} ({{ assessment.file_note.size_kb }} KB)</p>
+        <ul class="fl-list-clean small">
+          {% for f in assessment.file_note.flags %}<li>{{ f }}</li>{% endfor %}
+        </ul>
+        <p class="small text-muted fst-italic">{{ assessment.file_note.disclaimer }}</p>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <div class="col-lg-7">
+    <div class="fl-card">
+      <h5 class="section-title">Uploaded File Metadata Check</h5>
+      {% if assessment.file_note %}
+      <span class="fl-badge fl-badge-{{ assessment.file_note.status_class }}">{{ assessment.file_note.status }}</span>
+      <p class="text-muted small mt-2 mb-0">This checks file size and type only. No basic flags do not establish that an image is genuine.</p>
+      {% else %}
+      <span class="fl-badge fl-badge-na">NOT RUN</span>
+      <p class="text-muted small mt-2 mb-0">Upload a file to see its metadata check here. This is not deepfake detection.</p>
+      {% endif %}
+    </div>
+
+    <div class="fl-card">
+      <h5 class="section-title">System-Level Vulnerability</h5>
+      <span class="fl-badge fl-badge-{{ assessment.overall|lower }}" style="font-size:16px;">{{ assessment.overall }}</span>
+      <p class="text-muted small mt-2 mb-0">This fixed rating describes risks in the simulated verification process, not whether the uploaded file is a deepfake.</p>
+    </div>
+
+    <div class="fl-card">
+      <h5 class="section-title">Threat Categories</h5>
+      <table class="fl-table">
+        <thead><tr><th>Category</th><th>Risk</th></tr></thead>
+        <tbody>
+          {% for name, cat in assessment.categories.items() %}
+          <tr><td>{{ name }}</td><td><span class="fl-badge fl-badge-{{ cat.level|lower }}">{{ cat.level }}</span></td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Category Details</h5>
+  <div class="row g-4">
+    {% for name, cat in assessment.categories.items() %}
+    <div class="col-md-6">
+      <div class="d-flex justify-content-between">
+        <strong>{{ name }}</strong>
+        <span class="fl-badge fl-badge-{{ cat.level|lower }}">{{ cat.level }}</span>
+      </div>
+      <p class="text-muted small mb-1">{{ cat.explanation }}</p>
+      <p class="small mb-1"><strong>Consequence:</strong> {{ cat.consequence }}</p>
+      <p class="small"><strong>Mitigation:</strong> {{ cat.mitigation }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Why This Matters</h5>
+  <div class="row g-3">
+    {% for key, desc in assessment.harms_explained.items() %}
+    <div class="col-md-6">
+      <strong>{{ key.replace('_',' ')|title }}</strong>
+      <p class="text-muted small">{{ desc }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+{% endblock %}

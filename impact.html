@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+{% block title %}UNESCO/IEEE Impact Assessment{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Experiment 6</div>
+  <h1>Algorithmic Impact Assessment</h1>
+  <p>A questionnaire inspired by UNESCO's Recommendation on the Ethics of Artificial Intelligence and relevant IEEE responsible-AI principles.</p>
+</div>
+
+<div class="fl-info-box mb-4">
+  This questionnaire is an educational approximation. It does <strong>not</strong>
+  reproduce an official certification or official scoring methodology from
+  UNESCO or IEEE. See the README for links to the official source materials.
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Answer the Questionnaire</h5>
+  <form method="POST">
+    {% for q in questions %}
+    <div class="mb-3 pb-3" style="border-bottom:1px solid #f0f1f6;">
+      <div class="fl-form-label">{{ loop.index }}. {{ q.question }} <span class="text-muted">({{ q.category }})</span></div>
+      <div class="d-flex gap-3">
+        {% for opt in ["Yes","Partially","No"] %}
+        <div class="form-check">
+          <input class="form-check-input" type="radio" name="{{ q.id }}" id="{{ q.id }}_{{ opt }}" value="{{ opt }}" {{ "checked" if answers.get(q.id)==opt or (not answers and opt=='No') }}>
+          <label class="form-check-label" for="{{ q.id }}_{{ opt }}">{{ opt }}</label>
+        </div>
+        {% endfor %}
+      </div>
+    </div>
+    {% endfor %}
+    <button type="submit" class="btn btn-fl-primary">Calculate Assessment</button>
+  </form>
+</div>
+
+{% if category_results %}
+<div class="fl-card">
+  <h5 class="section-title">Overall Educational Assessment Score</h5>
+  <div class="fl-metric-value">{{ overall_score }}/100</div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Category Breakdown</h5>
+  <table class="fl-table">
+    <thead><tr><th>Category</th><th>Score</th><th>Status</th><th>Recommendation</th></tr></thead>
+    <tbody>
+      {% for c in category_results %}
+      <tr>
+        <td>{{ c.category }}</td>
+        <td>{{ c.score }}%</td>
+        <td><span class="fl-badge fl-badge-{{ 'low' if c.status=='Good' else ('moderate' if c.status=='Needs Improvement' else 'high') }}">{{ c.status }}</span></td>
+        <td>{{ c.recommendation }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endif %}
+
+<div class="fl-card">
+  <h5 class="section-title">References</h5>
+  <ul class="fl-list-clean">
+    <li><a href="https://www.unesco.org/en/artificial-intelligence/recommendation-ethics" target="_blank" rel="noopener">UNESCO Recommendation on the Ethics of Artificial Intelligence</a></li>
+    <li><a href="https://ethicsinaction.ieee.org/" target="_blank" rel="noopener">IEEE Global Initiative on Ethics of Autonomous and Intelligent Systems</a></li>
+  </ul>
+</div>
+
+{% endblock %}

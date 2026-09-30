@@ -1,0 +1,84 @@
+{% extends "base.html" %}
+{% block title %}Ethical Analysis{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Experiment 1</div>
+  <h1>Ethical Analysis of AI Applications</h1>
+  <p>Focus: the simulated FairLoan loan-approval system.</p>
+</div>
+
+<div class="fl-step-structure">
+  <span class="fl-step-chip">1. Objective</span>
+  <span class="fl-step-chip">2. Method</span>
+  <span class="fl-step-chip">3. Results</span>
+  <span class="fl-step-chip">4. Interpretation</span>
+  <span class="fl-step-chip">5. Ethical Implications</span>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Objective</h5>
+  <p>Evaluate the simulated AI loan-approval system across six core ethical dimensions &mdash; fairness, privacy, transparency, accountability, human oversight, and security &mdash; using a documented, rule-based scoring rubric.</p>
+  <div class="fl-info-box">These scores are an educational scoring exercise created for this project. They are <strong>not</strong> official UNESCO or IEEE certification scores.</div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Results: Category Scores</h5>
+  <div class="row g-4">
+    {% for key, cat in analysis.categories.items() %}
+    <div class="col-md-6">
+      <div class="d-flex justify-content-between mb-1">
+        <strong>{{ key.replace('_',' ')|title }}</strong>
+        <span>{{ cat.score }}/100</span>
+      </div>
+      <div class="fl-progress mb-2">
+        <div class="fl-progress-bar {{ 'low' if cat.score<40 else ('moderate' if cat.score<70 else 'high') }}" style="width: {{ cat.score }}%;"></div>
+      </div>
+      <p class="text-muted small">{{ cat.explanation }}</p>
+    </div>
+    {% endfor %}
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Overall Ethical Risk</h5>
+  <div class="d-flex align-items-center gap-3">
+    <div class="fl-metric-value">{{ analysis.overall_score }}/100</div>
+    <span class="fl-badge fl-badge-{{ analysis.risk_level|lower }}">{{ analysis.risk_level }} RISK</span>
+  </div>
+  <p class="text-muted small mt-2">Risk levels: 0&ndash;39 Low · 40&ndash;69 Moderate · 70&ndash;100 High (higher category score = better practice, so risk level here reflects distance from full ethical maturity).</p>
+</div>
+
+<div class="row g-4">
+  <div class="col-md-6">
+    <div class="fl-card h-100">
+      <h5 class="section-title">Stakeholders</h5>
+      <ul class="fl-list-clean">{% for s in context.stakeholders %}<li>{{ s }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="fl-card h-100">
+      <h5 class="section-title">Potential Benefits</h5>
+      <ul class="fl-list-clean">{% for s in context.potential_benefits %}<li>{{ s }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="fl-card h-100">
+      <h5 class="section-title">Potential Harms</h5>
+      <ul class="fl-list-clean">{% for s in context.potential_harms %}<li>{{ s }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+  <div class="col-md-6">
+    <div class="fl-card h-100">
+      <h5 class="section-title">Ethical Concerns</h5>
+      <ul class="fl-list-clean">{% for s in context.ethical_concerns %}<li>{{ s }}</li>{% endfor %}</ul>
+    </div>
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Recommended Safeguards</h5>
+  <ul class="fl-list-clean">{% for s in context.recommended_safeguards %}<li>{{ s }}</li>{% endfor %}</ul>
+</div>
+
+{% endblock %}

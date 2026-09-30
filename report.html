@@ -1,0 +1,86 @@
+{% extends "base.html" %}
+{% block title %}Final Ethics Report{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Final Deliverable</div>
+  <h1>Final AI Ethics Report</h1>
+  <p>Combined findings from all FairLoan audit modules, with a transparent, documented scoring methodology.</p>
+</div>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<div class="fl-card" style="background:#131a2b; color:#fff;">
+  <div class="row text-center g-3">
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Model Accuracy</div>
+      <div style="font-size:26px; font-weight:800;">{{ (ctx.model_accuracy*100)|round(1) }}%</div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Dataset Bias</div>
+      <span class="fl-badge fl-badge-{{ ctx.bias_risk|lower }}">{{ ctx.bias_risk }}</span>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Fairness Risk</div>
+      <span class="fl-badge fl-badge-{{ ctx.fairness_risk|lower }}">{{ ctx.fairness_risk }}</span>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Cost-as-Proxy Risk</div>
+      <span class="fl-badge fl-badge-{{ ctx.proxy_risk|lower }}">{{ ctx.proxy_risk }}</span>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Explainability</div>
+      <span class="fl-badge fl-badge-good">GOOD</span>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Deepfake Vulnerability</div>
+      <span class="fl-badge fl-badge-{{ ctx.deepfake_risk|lower }}">{{ ctx.deepfake_risk }}</span>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Impact Assessment</div>
+      <div style="font-size:22px; font-weight:800;">{{ ctx.impact_score }}/100</div>
+    </div>
+    <div class="col-6 col-md-3">
+      <div style="font-size:12px; color:#aab3cc;">Overall Ethics Score</div>
+      <div style="font-size:26px; font-weight:800;">{{ ctx.overall_score }}/100</div>
+      <span class="fl-badge fl-badge-{{ ctx.overall_risk|lower }}">{{ ctx.overall_risk }}</span>
+    </div>
+  </div>
+</div>
+
+<div class="fl-info-box mb-4">{{ ctx.note }}</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Scoring Methodology (Fully Transparent)</h5>
+  <p class="text-muted small">The overall score is a documented weighted average. Risk labels (LOW/MODERATE/HIGH) are converted to numeric sub-scores (LOW=80, MODERATE=45, HIGH=15 after inversion) before weighting. Nothing here is hardcoded — every sub-score is calculated live from the current dataset and model.</p>
+  <table class="fl-table">
+    <thead><tr><th>Component</th><th>Weight</th><th>Sub-score (0-100)</th></tr></thead>
+    <tbody>
+      {% for b in ctx.breakdown %}
+      <tr><td>{{ b.component }}</td><td>{{ (b.weight*100)|round(0) }}%</td><td>{{ b.sub_score }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Recommendations</h5>
+  <ol class="fl-list-clean">
+    {% for r in ctx.recommendations %}<li>{{ r }}</li>{% endfor %}
+  </ol>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Module Links</h5>
+  <div class="fl-dashboard-grid">
+    <a href="{{ url_for('bias') }}" class="fl-nav-card"><h4>📊 Dataset Bias</h4><p>Full disparity breakdown</p></a>
+    <a href="{{ url_for('fairness') }}" class="fl-nav-card"><h4>🧭 Fairness Dashboard</h4><p>Group metrics detail</p></a>
+    <a href="{{ url_for('proxy_bias_page') }}" class="fl-nav-card"><h4>💰 Cost-as-Proxy</h4><p>Model A vs Model B</p></a>
+    <a href="{{ url_for('deepfake') }}" class="fl-nav-card"><h4>🕵️ Deepfake Risk</h4><p>Vulnerability categories</p></a>
+    <a href="{{ url_for('impact') }}" class="fl-nav-card"><h4>🌍 Impact Assessment</h4><p>Customize your score</p></a>
+  </div>
+</div>
+
+{% endif %}
+{% endblock %}

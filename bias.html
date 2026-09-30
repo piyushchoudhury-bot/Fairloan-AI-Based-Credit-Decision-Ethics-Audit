@@ -1,0 +1,139 @@
+{% extends "base.html" %}
+{% block title %}Dataset Bias{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Experiment 2</div>
+  <h1>Dataset Bias Detection</h1>
+  <p>Objective: examine loan_data.csv for representation and outcome disparities.</p>
+</div>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<div class="fl-metric-grid">
+  <div class="fl-metric-card"><div class="fl-metric-label">Rows</div><div class="fl-metric-value">{{ ctx.stats.n_rows }}</div></div>
+  <div class="fl-metric-card"><div class="fl-metric-label">Columns</div><div class="fl-metric-value">{{ ctx.stats.n_cols }}</div></div>
+  <div class="fl-metric-card"><div class="fl-metric-label">Missing Values</div><div class="fl-metric-value">{{ ctx.stats.missing_values }}</div></div>
+  <div class="fl-metric-card"><div class="fl-metric-label">Duplicate Rows</div><div class="fl-metric-value">{{ ctx.stats.duplicate_rows }}</div></div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Dataset Bias Risk</div>
+    <span class="fl-badge fl-badge-{{ ctx.bias_risk|lower }}">{{ ctx.bias_risk }}</span>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Class Distribution (Loan Approved)</h5>
+      <canvas id="classChart" height="180"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Gender Distribution</h5>
+      <canvas id="genderDistChart" height="180"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Age Distribution</h5>
+      <canvas id="ageChart" height="180"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Location &amp; Education Distribution</h5>
+      <canvas id="locEduChart" height="180"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Group-wise Approval Rates</h5>
+  <table class="fl-table mb-3">
+    <thead><tr><th>Group</th><th>Category</th><th>Approval Rate</th><th>Count</th></tr></thead>
+    <tbody>
+      {% for g, v in ctx.gender_approval.items() %}
+      <tr><td>Gender</td><td>{{ g }}</td><td>{{ v.approval_rate }}%</td><td>{{ v.count }}</td></tr>
+      {% endfor %}
+      {% for g, v in ctx.location_approval.items() %}
+      <tr><td>Location</td><td>{{ g }}</td><td>{{ v.approval_rate }}%</td><td>{{ v.count }}</td></tr>
+      {% endfor %}
+      {% for g, v in ctx.education_approval.items() %}
+      <tr><td>Education</td><td>{{ g }}</td><td>{{ v.approval_rate }}%</td><td>{{ v.count }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+
+  {% if ctx.gender_flag %}<div class="fl-disclaimer">⚠️ Meaningful gender approval-rate disparity detected: {{ ctx.gender_gap }} percentage points.</div>{% endif %}
+  {% if ctx.location_flag %}<div class="fl-disclaimer">⚠️ Meaningful location approval-rate disparity detected: {{ ctx.location_gap }} percentage points.</div>{% endif %}
+  {% if ctx.education_flag %}<div class="fl-disclaimer">⚠️ Meaningful education approval-rate disparity detected: {{ ctx.education_gap }} percentage points.</div>{% endif %}
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Interpreting Disparity: Bias Terminology</h5>
+  <div class="row g-3">
+    <div class="col-md-6">
+      <strong>Representation bias</strong>
+      <p class="text-muted small">Occurs when certain groups are under- or over-represented in the training data relative to the real population, which can skew what the model learns as "typical."</p>
+    </div>
+    <div class="col-md-6">
+      <strong>Historical bias</strong>
+      <p class="text-muted small">Arises when the data reflects past societal inequities (e.g., historically unequal access to credit), even if collected accurately.</p>
+    </div>
+    <div class="col-md-6">
+      <strong>Sampling bias</strong>
+      <p class="text-muted small">Occurs when the process used to collect the data systematically favors certain groups or situations over others.</p>
+    </div>
+    <div class="col-md-6">
+      <strong>Outcome disparity</strong>
+      <p class="text-muted small">A measurable difference in results (e.g., approval rates) between groups. It is a <em>signal</em> that invites investigation &mdash; not automatic proof of discrimination, since legitimate factors may also differ between groups.</p>
+    </div>
+  </div>
+  <div class="fl-info-box mt-3">FairLoan does not automatically label any statistical difference as discrimination. Disparities shown above should be investigated alongside domain context before drawing conclusions.</div>
+</div>
+
+<script>
+const colors = fairloanChartColors();
+
+new Chart(document.getElementById('classChart'), {
+  type: 'doughnut',
+  data: {
+    labels: ['Approved', 'Rejected'],
+    datasets: [{ data: [{{ (ctx.stats.class_distribution.get(1,0)*100)|round(2) }}, {{ (ctx.stats.class_distribution.get(0,0)*100)|round(2) }}],
+      backgroundColor: [colors.low, colors.high] }]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('genderDistChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ ctx.gender_dist.keys()|list|tojson }},
+    datasets: [{ label: '% of dataset', data: {{ ctx.gender_dist.values()|list|tojson }}, backgroundColor: colors.primary }]
+  },
+  options: { plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('ageChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ ctx.age_dist.keys()|list|tojson }},
+    datasets: [{ label: '% of dataset', data: {{ ctx.age_dist.values()|list|tojson }}, backgroundColor: colors.accent }]
+  },
+  options: { plugins: { legend: { display: false } } }
+});
+
+new Chart(document.getElementById('locEduChart'), {
+  type: 'bar',
+  data: {
+    labels: {{ ((ctx.location_dist.keys()|list) + (ctx.education_dist.keys()|list))|tojson }},
+    datasets: [{ label: '% of dataset', data: {{ ((ctx.location_dist.values()|list) + (ctx.education_dist.values()|list))|tojson }}, backgroundColor: colors.gray }]
+  },
+  options: { plugins: { legend: { display: false } } }
+});
+</script>
+
+{% endif %}
+{% endblock %}

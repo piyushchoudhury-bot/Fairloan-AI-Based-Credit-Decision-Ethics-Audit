@@ -1,0 +1,134 @@
+{% extends "base.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Educational AI Ethics Simulation</div>
+  <h1>FairLoan &mdash; AI-Based Credit Decision Ethics Audit</h1>
+  <p>An educational platform for evaluating fairness, bias, explainability, and ethical risks in AI-based loan decisions.</p>
+</div>
+
+{% if overview.errors %}
+  <div class="fl-card" style="border-color:#ffd9a0; background:#fffaf0;">
+    <strong>Setup needed:</strong>
+    <ul class="mb-0">
+      {% for err in overview.errors %}<li>{{ err }}</li>{% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+<div class="fl-metric-grid">
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Model Accuracy</div>
+    <div class="fl-metric-value">{{ (overview.model_accuracy*100)|round(1) if overview.model_accuracy is not none else "—" }}{{ "%" if overview.model_accuracy is not none }}</div>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Fairness Risk</div>
+    <span class="fl-badge fl-badge-{{ overview.fairness_risk|lower }}">{{ overview.fairness_risk }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Dataset Bias Risk</div>
+    <span class="fl-badge fl-badge-{{ overview.dataset_bias_risk|lower }}">{{ overview.dataset_bias_risk }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Proxy Bias Risk</div>
+    <span class="fl-badge fl-badge-{{ overview.proxy_bias_risk|lower }}">{{ overview.proxy_bias_risk }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Explainability</div>
+    <span class="fl-badge fl-badge-good">{{ overview.explainability_status }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Deepfake Vulnerability</div>
+    <span class="fl-badge fl-badge-{{ overview.deepfake_vulnerability|lower }}">{{ overview.deepfake_vulnerability }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Overall Ethics Score</div>
+    <div class="fl-metric-value">{{ overview.overall_ethics_score if overview.overall_ethics_score is not none else "—" }}{{ "/100" if overview.overall_ethics_score is not none }}</div>
+    <span class="fl-badge fl-badge-{{ overview.overall_risk_level|lower }} mt-1">{{ overview.overall_risk_level }}</span>
+  </div>
+</div>
+
+<h5 class="section-title mb-3">Explore the Audit Modules</h5>
+<div class="fl-dashboard-grid mb-4">
+  <a href="{{ url_for('predict') }}" class="fl-nav-card">
+    <span class="icon">🧮</span>
+    <h4>Loan Prediction</h4>
+    <p>Run the ML model on a simulated applicant profile.</p>
+  </a>
+  <a href="{{ url_for('ethical_analysis') }}" class="fl-nav-card">
+    <span class="icon">⚖️</span>
+    <h4>Ethical Analysis</h4>
+    <p>Fairness, privacy, transparency &amp; accountability scoring.</p>
+  </a>
+  <a href="{{ url_for('bias') }}" class="fl-nav-card">
+    <span class="icon">📊</span>
+    <h4>Dataset Bias</h4>
+    <p>Representation and outcome disparity detection.</p>
+  </a>
+  <a href="{{ url_for('deepfake') }}" class="fl-nav-card">
+    <span class="icon">🕵️</span>
+    <h4>Deepfake Vulnerability</h4>
+    <p>Identity &amp; document fraud risk simulation.</p>
+  </a>
+  <a href="{{ url_for('proxy_bias_page') }}" class="fl-nav-card">
+    <span class="icon">💰</span>
+    <h4>Cost-as-Proxy Bias</h4>
+    <p>Do spending/balance features act as SES proxies?</p>
+  </a>
+  <a href="{{ url_for('fairness') }}" class="fl-nav-card">
+    <span class="icon">🧭</span>
+    <h4>Fairness Dashboard</h4>
+    <p>Fairlearn group metrics &amp; disparity measures.</p>
+  </a>
+  <a href="{{ url_for('explainability') }}" class="fl-nav-card">
+    <span class="icon">🔍</span>
+    <h4>Explainability</h4>
+    <p>SHAP-based global &amp; individual explanations.</p>
+  </a>
+  <a href="{{ url_for('impact') }}" class="fl-nav-card">
+    <span class="icon">🌍</span>
+    <h4>UNESCO &amp; IEEE Impact</h4>
+    <p>Algorithmic impact assessment questionnaire.</p>
+  </a>
+  <a href="{{ url_for('report') }}" class="fl-nav-card">
+    <span class="icon">📄</span>
+    <h4>Final Ethics Report</h4>
+    <p>Combined findings &amp; recommendations.</p>
+  </a>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">About This Project</h5>
+  <p><strong>Problem statement:</strong> AI-based loan decision systems can improve efficiency, but they can also introduce bias, proxy discrimination, lack of transparency, and other ethical risks. FairLoan provides an educational framework for evaluating these risks.</p>
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <h6>Objectives</h6>
+      <ul class="fl-list-clean">
+        <li>Analyze ethical risks in AI loan approval.</li>
+        <li>Detect dataset bias.</li>
+        <li>Assess deepfake-related vulnerabilities.</li>
+        <li>Investigate cost-as-a-proxy resource bias.</li>
+        <li>Evaluate fairness and explainability.</li>
+        <li>Operationalize responsible AI principles via impact assessment.</li>
+      </ul>
+    </div>
+    <div class="col-md-6">
+      <h6>Expected Outcomes</h6>
+      <ul class="fl-list-clean">
+        <li>Identify dataset disparities.</li>
+        <li>Measure group-level fairness.</li>
+        <li>Identify possible proxy features.</li>
+        <li>Explain model predictions.</li>
+        <li>Assess deepfake-related risks.</li>
+        <li>Generate an overall ethical assessment.</li>
+      </ul>
+    </div>
+  </div>
+  <div class="fl-disclaimer mt-3">
+    This is an educational/academic simulation. FairLoan is not a real banking
+    or credit-scoring product and must never be used to make actual financial decisions.
+  </div>
+</div>
+
+{% endblock %}

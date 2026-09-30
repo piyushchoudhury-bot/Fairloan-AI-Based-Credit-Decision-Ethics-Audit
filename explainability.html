@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}Explainability{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Model Explainability</div>
+  <h1>Model Explainability</h1>
+  <p>Global feature influence and per-applicant explanations using SHAP (with a documented fallback).</p>
+</div>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<div class="fl-card">
+  <h5 class="section-title">Global Explanation ({{ ctx.global_method }})</h5>
+  <p class="text-muted small">Ranked by mean absolute contribution across a sample of applicants. This reflects statistical feature importance, not proven causal influence.</p>
+  <canvas id="globalChart" height="200"></canvas>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Individual Prediction Explanation</h5>
+  <form method="GET" class="d-flex gap-2 mb-3" style="max-width:320px;">
+    <input type="number" min="0" max="{{ ctx.n_rows - 1 }}" name="applicant_id" value="{{ ctx.sample_idx }}" class="form-control">
+    <button type="submit" class="btn btn-fl-outline">Load Applicant</button>
+  </form>
+
+  <h4 class="{{ 'text-success' if ctx.prediction=='Loan Approved' else 'text-danger' }}">{{ ctx.prediction }} ({{ ctx.probability }}%)</h4>
+
+  <div class="row">
+    <div class="col-md-6">
+      <h6 class="mt-3">Applicant Feature Values</h6>
+      <table class="fl-table">
+        <tbody>
+        {% for k, v in ctx.applicant_row.items() %}
+          <tr><td>{{ k.replace('_',' ')|title }}</td><td>{{ v }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6">
+      <h6 class="mt-3">Top Contributing Factors ({{ ctx.ind_method }})</h6>
+      <table class="fl-table">
+        <thead><tr><th>Factor</th><th>Contribution</th><th>Direction</th></tr></thead>
+        <tbody>
+        {% for c in ctx.contributions %}
+          <tr><td>{{ c.feature }}</td><td>{{ c.contribution }}</td><td>{{ c.direction }}</td></tr>
+        {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Interpretation Notes</h5>
+  <ul class="fl-list-clean">
+    <li>Feature importance describes which inputs the model relied on most &mdash; it does not prove that a feature <em>causes</em> creditworthiness.</li>
+    <li>SHAP values are computed relative to the model's average prediction, so a positive value means "pushed this prediction above average," not "guaranteed approval."</li>
+    <li>The fallback method (feature importance × value) is a simplified approximation used only if SHAP is unavailable, and is clearly labeled when used.</li>
+  </ul>
+</div>
+
+<script>
+const colors = fairloanChartColors();
+const globalData = {{ ctx.global_ranked|tojson }};
+new Chart(document.getElementById('globalChart'), {
+  type: 'bar',
+  data: {
+    labels: globalData.map(d => d.feature),
+    datasets: [{ label: 'Mean |Contribution|', data: globalData.map(d => d.importance), backgroundColor: colors.primary }]
+  },
+  options: { indexAxis: 'y', plugins: { legend: { display: false } } }
+});
+</script>
+
+{% endif %}
+{% endblock %}

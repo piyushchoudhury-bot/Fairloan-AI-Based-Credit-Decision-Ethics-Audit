@@ -1,0 +1,114 @@
+{% extends "base.html" %}
+{% block title %}Fairness Dashboard{% endblock %}
+{% block content %}
+
+<div class="fl-page-header">
+  <div class="fl-eyebrow">Experiment 5</div>
+  <h1>AI Fairness Dashboard</h1>
+  <p>Group-wise performance and Fairlearn disparity measures, using gender as the demonstration sensitive attribute.</p>
+</div>
+
+{% if error %}<div class="alert alert-danger">{{ error }}</div>
+{% else %}
+
+<div class="fl-metric-grid">
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Demographic Parity Difference</div>
+    <div class="fl-metric-value">{{ ctx.disparities.demographic_parity_difference }}</div>
+    <span class="fl-badge fl-badge-{{ ctx.dpd_risk|lower }}">{{ ctx.dpd_risk }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Demographic Parity Ratio</div>
+    <div class="fl-metric-value">{{ ctx.disparities.demographic_parity_ratio }}</div>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Equal Opportunity Difference</div>
+    <div class="fl-metric-value">{{ ctx.disparities.equal_opportunity_difference }}</div>
+    <span class="fl-badge fl-badge-{{ ctx.eod_risk|lower }}">{{ ctx.eod_risk }}</span>
+  </div>
+  <div class="fl-metric-card">
+    <div class="fl-metric-label">Equalized Odds Difference</div>
+    <div class="fl-metric-value">{{ ctx.disparities.equalized_odds_difference }}</div>
+  </div>
+</div>
+
+<div class="row g-4">
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Overall vs. Group Performance</h5>
+      <canvas id="perfChart" height="220"></canvas>
+    </div>
+  </div>
+  <div class="col-lg-6">
+    <div class="fl-card">
+      <h5 class="section-title">Selection Rate &amp; Error Rates by Group</h5>
+      <canvas id="rateChart" height="220"></canvas>
+    </div>
+  </div>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Full Group Metrics Table</h5>
+  <table class="fl-table">
+    <thead>
+      <tr><th>Metric</th><th>Overall</th>{% for g in ctx.group_metrics.by_group.accuracy.keys() %}<th>{{ g }}</th>{% endfor %}</tr>
+    </thead>
+    <tbody>
+      {% for metric in ['accuracy','precision','recall','f1','selection_rate','true_positive_rate','false_positive_rate','false_negative_rate'] %}
+      <tr>
+        <td>{{ metric.replace('_',' ')|title }}</td>
+        <td>{{ ctx.group_metrics.overall[metric] }}</td>
+        {% for g, v in ctx.group_metrics.by_group[metric].items() %}<td>{{ v }}</td>{% endfor %}
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+
+<div class="fl-card">
+  <h5 class="section-title">Plain-Language Guide to Fairness Metrics</h5>
+  <ul class="fl-list-clean">
+    <li><strong>Demographic Parity Difference:</strong> the difference in approval rate between groups. 0 means both groups are approved at the same rate.</li>
+    <li><strong>Demographic Parity Ratio:</strong> the ratio of the lower group's approval rate to the higher group's. 1.0 is perfectly equal.</li>
+    <li><strong>Equal Opportunity Difference:</strong> the difference in true positive rate (correctly approved among those who should be approved) between groups.</li>
+    <li><strong>Equalized Odds Difference:</strong> the larger of the true-positive-rate gap and false-positive-rate gap between groups &mdash; a stricter combined fairness measure.</li>
+  </ul>
+</div>
+
+<script>
+const colors = fairloanChartColors();
+const gm = {{ ctx.group_metrics|tojson }};
+const groups = Object.keys(gm.by_group.accuracy);
+
+new Chart(document.getElementById('perfChart'), {
+  type: 'bar',
+  data: {
+    labels: ['Accuracy','Precision','Recall','F1'],
+    datasets: [
+      { label: 'Overall', data: [gm.overall.accuracy, gm.overall.precision, gm.overall.recall, gm.overall.f1], backgroundColor: colors.gray },
+      ...groups.map((g,i) => ({
+        label: g,
+        data: [gm.by_group.accuracy[g], gm.by_group.precision[g], gm.by_group.recall[g], gm.by_group.f1[g]],
+        backgroundColor: i === 0 ? colors.primary : colors.accent
+      }))
+    ]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+
+new Chart(document.getElementById('rateChart'), {
+  type: 'bar',
+  data: {
+    labels: groups,
+    datasets: [
+      { label: 'Selection Rate', data: groups.map(g => gm.by_group.selection_rate[g]), backgroundColor: colors.primary },
+      { label: 'False Positive Rate', data: groups.map(g => gm.by_group.false_positive_rate[g]), backgroundColor: colors.moderate },
+      { label: 'False Negative Rate', data: groups.map(g => gm.by_group.false_negative_rate[g]), backgroundColor: colors.high },
+    ]
+  },
+  options: { plugins: { legend: { position: 'bottom' } } }
+});
+</script>
+
+{% endif %}
+{% endblock %}
