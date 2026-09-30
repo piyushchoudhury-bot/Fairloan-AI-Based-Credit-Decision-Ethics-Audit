@@ -247,18 +247,3 @@ data is used anywhere in this project.
 - Add a real (opt-in, consent-based) image-forensics model for the
   deepfake module in a future, non-classroom iteration.
 
----
-
-### Demonstrating This Project in Class
-
-1. Run `python generate_dataset.py` then `python train_model.py` live to
-   show reproducibility (fixed seed → same accuracy every time).
-2. Start with the **Dashboard** to give an overview of every metric.
-3. Walk through **Dataset Bias → Fairness Dashboard → Cost-as-Proxy** in
-   that order — it tells a coherent story: "here's a disparity, here's how
-   it shows up in fairness metrics, here's a feature-level explanation for
-   why."
-4. Show **Explainability** on one specific rejected applicant to make the
-   audit concrete.
-5. Finish on the **Final Ethics Report** to show how every module rolls up
-   into one transparent, documented score.
